@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+
+# Flask
+instance/
+*.db
+*.sqlite
+phishing_detector.db
+
+# ML model artefacts (regenerate via training)
+models_storage/
+*.joblib
+*.pkl
+
+# Environments
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts.bak
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Coverage / testing
+.coverage
+htmlcov/
