@@ -32,7 +32,7 @@ function App() {
     setResult(null);
     
     try {
-      const response = await axios.post('http://localhost:5000/predict', { text });
+      const response = await axios.post('/api/predict', { text });
       setResult(response.data);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to connect to the analysis engine.');
