@@ -70,22 +70,22 @@ def predict():
     probabilities = model.predict_proba(features)[0]
     confidence = max(probabilities) * 100
     
-    # Extract suspicious words if phishing
+    # Extract suspicious words if phishing (Using Random Forest Feature Importances)
     suspicious_words = []
-    if prediction == 'phishing':
+    if prediction == 'phishing' and hasattr(model, 'feature_importances_'):
         feature_names = vectorizer.get_feature_names_out()
-        coefficients = model.coef_[0]
+        importances = model.feature_importances_
         
         # Get the indices of the words present in the message
         feature_indices = features.nonzero()[1]
         
-        # Create a list of (word, weight) for the present words
-        word_weights = [(feature_names[idx], coefficients[idx]) for idx in feature_indices]
+        # Create a list of (word, importance) for the present words
+        word_weights = [(feature_names[idx], importances[idx]) for idx in feature_indices]
         
-        # Sort by weight descending (highest positive weights are most "phishy")
+        # Sort by importance descending
         word_weights.sort(key=lambda x: x[1], reverse=True)
         
-        # Get the top 5 words that contributed to phishing
+        # Get the top 5 most important words that are present in this phishing message
         suspicious_words = [word for word, weight in word_weights if weight > 0][:5]
     
     # Save to MariaDB
@@ -107,6 +107,27 @@ def predict():
         'confidence': round(confidence, 2),
         'suspicious_words': suspicious_words
     })
+
+@app.route('/report', methods=['POST'])
+def report_feedback():
+    data = request.get_json()
+    if not data or 'text' not in data or 'correct_label' not in data:
+        return jsonify({'error': 'Missing text or correct_label.'}), 400
+        
+    text = data['text']
+    correct_label = data['correct_label']
+    
+    # In a real continuous learning system, we would save this to a Feedback table.
+    # For now, we simply append it back to our training dataset!
+    try:
+        data_path = os.path.join(os.path.dirname(__file__), 'data', 'phishing_dataset.csv')
+        with open(data_path, 'a', encoding='utf-8') as f:
+            # Escape quotes just in case
+            safe_text = text.replace('"', '""')
+            f.write(f'\n{correct_label},"{safe_text}"')
+        return jsonify({'status': 'Feedback received and added to training queue!'})
+    except Exception as e:
+        return jsonify({'error': f"Failed to save feedback: {str(e)}"}), 500
 
 @app.route('/history', methods=['GET'])
 def get_history():
