@@ -1,0 +1,42 @@
+version: "3.9"
+services:
+  backend:
+    build: ./backend
+    container_name: phishguard-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://phish:phish@db:5432/phishguard
+      - SECRET_KEY=dev-secret-key
+      - JWT_SECRET_KEY=dev-jwt-secret
+      - ALLOWED_ORIGINS=http://localhost:3000
+    depends_on:
+      - db
+    volumes:
+      - ./backend/models_storage:/app/models_storage
+
+  frontend:
+    build: ./frontend
+    container_name: phishguard-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:15-alpine
+    container_name: phishguard-db
+    environment:
+      - POSTGRES_USER=phish
+      - POSTGRES_PASSWORD=phish
+      - POSTGRES_DB=phishguard
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

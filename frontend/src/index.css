@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply text-black antialiased selection:bg-black selection:text-white min-h-screen font-sans;
+    background-color: #f8fafc; /* slate-50 */
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px); /* slate-300 dots */
+    background-size: 24px 24px;
+  }
+}
