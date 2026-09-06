@@ -13,20 +13,24 @@ app = Flask(__name__)
 # Enable CORS so the React frontend can communicate with this API
 CORS(app)
 
-# Configure Database connection (fallback to SQLite for easy local testing)
-import traceback
+# Configure Database connection
+basedir = os.path.abspath(os.path.dirname(__file__))
+sqlite_uri = 'sqlite:///' + os.path.join(basedir, 'phishing_db.sqlite')
+mysql_uri = 'mysql+pymysql://root:@localhost/phishing_db'
+
+import sqlalchemy
 try:
     # Try MySQL first
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/phishing_db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    engine = sqlalchemy.create_engine(mysql_uri)
+    engine.connect()
+    app.config['SQLALCHEMY_DATABASE_URI'] = mysql_uri
+    print("Connected to MySQL/MariaDB.")
 except:
-    pass
+    # Fallback to SQLite if MySQL is not running
+    app.config['SQLALCHEMY_DATABASE_URI'] = sqlite_uri
+    print("MySQL not available. Falling back to SQLite.")
 
-# We will just use SQLite to guarantee it runs for the user immediately!
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'phishing_db.sqlite')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 app.config['JWT_SECRET_KEY'] = 'super-secret-key' # Change this in production
 jwt = JWTManager(app)
 
