@@ -20,12 +20,17 @@ mysql_uri = 'mysql+pymysql://root:@localhost/phishing_db'
 
 import sqlalchemy
 try:
-    # Try MySQL first
+    # First ensure the database exists in MySQL
+    setup_engine = sqlalchemy.create_engine('mysql+pymysql://root:@localhost/')
+    with setup_engine.connect() as conn:
+        conn.execute(sqlalchemy.text("CREATE DATABASE IF NOT EXISTS phishing_db"))
+    
+    # Now connect to it
     engine = sqlalchemy.create_engine(mysql_uri)
     engine.connect()
     app.config['SQLALCHEMY_DATABASE_URI'] = mysql_uri
     print("Connected to MySQL/MariaDB.")
-except:
+except Exception as e:
     # Fallback to SQLite if MySQL is not running
     app.config['SQLALCHEMY_DATABASE_URI'] = sqlite_uri
     print("MySQL not available. Falling back to SQLite.")
@@ -209,10 +214,15 @@ def register():
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
+    print("LOGIN ATTEMPT:", data)
     if not data or not data.get('username') or not data.get('password'):
         return jsonify({'error': 'Username and password required'}), 400
         
     user = User.query.filter_by(username=data['username']).first()
+    print("USER FOUND:", user)
+    if user:
+        print("PASSWORD HASH MATCH?", check_password_hash(user.password_hash, data['password']))
+    
     if user and check_password_hash(user.password_hash, data['password']):
         access_token = create_access_token(
             identity=str(user.id), 
